@@ -57,12 +57,3 @@ Desenvolvido como projeto de estudos para lógica de programação. 🚀
 
 
 ---
-
-### Como atualizar no GitHub:
-Após colar e salvar o arquivo no VS Code, execute estes comandos para limpar os erros anteriores e subir o texto novo:
-
-1. `git add README.md`
-2. `git commit -m "Corrigindo codificação e conteúdo do README"`
-3. `git push origin main`
-
-**O que você acha de adicionarmos o link do seu jogo direto no topo do README para que as pessoas possam jogar com um clique?**
