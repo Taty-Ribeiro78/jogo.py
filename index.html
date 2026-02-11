@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Adivinhação</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2c3e50;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --bg: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .game-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 { color: var(--secondary); margin-bottom: 1rem; }
+
+        .setup-section, .game-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .hidden { display: none; }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .btn-nivel { background: var(--primary); color: white; }
+        .btn-nivel:hover { background: #2980b9; transform: scale(1.02); }
+
+        input {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            min-height: 1.5em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h1>🔢 Adivinhação</h1>
+
+    <div id="setup" class="setup-section">
+        <p>Escolha a dificuldade:</p>
+        <button class="btn-nivel" onclick="startGame(20)">Fácil (20 tentativas)</button>
+        <button class="btn-nivel" onclick="startGame(10)">Médio (10 tentativas)</button>
+        <button class="btn-nivel" onclick="startGame(5)">Difícil (5 tentativas)</button>
+    </div>
+
+    <div id="game" class="game-section hidden">
+        <div class="stats">
+            <span>Tentativa: <b id="current-try">1</b>/<span id="max-tries">10</span></span>
+            <span>Pontos: <b id="score">1000</b></span>
+        </div>
+
+        <input type="number" id="guess-input" placeholder="1 a 100" min="1" max="100">
+        <button id="btn-chutar" class="btn-nivel" style="background: var(--success);" onclick="makeGuess()">Chutar!</button>
+        
+        <div id="feedback" class="feedback"></div>
+        
+        <button id="reset-btn" class="hidden" onclick="location.reload()" style="background: var(--secondary); color: white;">Jogar Novamente</button>
+    </div>
+</div>
+
+<script>
+    let secretNumber;
+    let totalTries;
+    let currentTry = 1;
+    let points = 1000;
+    let gameOver = false;
+
+    function startGame(tries) {
+        totalTries = tries;
+        secretNumber = Math.floor(Math.random() * 100) + 1;
+        
+        // Alterna as telas
+        document.getElementById('setup').classList.add('hidden');
+        document.getElementById('game').classList.remove('hidden');
+        document.getElementById('max-tries').innerText = tries;
+        document.getElementById('guess-input').focus();
+    }
+
+    function makeGuess() {
+        if(gameOver) return;
+
+        const input = document.getElementById('guess-input');
+        const guess = parseInt(input.value);
+        const feedback = document.getElementById('feedback');
+
+        // Validação
+        if (isNaN(guess) || guess < 1 || guess > 100) {
+            feedback.innerText = "Digite um número entre 1 e 100!";
+            feedback.style.color = "var(--danger)";
+            return;
+        }
+
+        if (guess === secretNumber) {
+            endGame(true);
+        } else {
+            // Lógica de pontos (igual ao seu Python: perde a diferença entre os números)
+            let lostPoints = Math.abs(secretNumber - guess);
+            points -= lostPoints;
+            document.getElementById('score').innerText = Math.max(0, points);
+
+            // Dicas
+            if (guess > secretNumber) {
+                feedback.innerText = "O número secreto é MENOR! 👇";
+            } else {
+                feedback.innerText = "O número secreto é MAIOR! 👆";
+            }
+            feedback.style.color = "var(--secondary)";
+
+            // Controle de tentativas
+            if (currentTry >= totalTries) {
+                endGame(false);
+            } else {
+                currentTry++;
+                document.getElementById('current-try').innerText = currentTry;
+            }
+        }
+        
+        input.value = '';
+        input.focus();
+    }
+
+    function endGame(won) {
+        gameOver = true;
+        const feedback = document.getElementById('feedback');
+        const resetBtn = document.getElementById('reset-btn');
+        const btnChutar = document.getElementById('btn-chutar');
+        const input = document.getElementById('guess-input');
+
+        if (won) {
+            feedback.innerHTML = `🎉 ACERTOU!<br>Sua pontuação final foi: ${Math.max(0, points)}`;
+            feedback.style.color = "var(--success)";
+        } else {
+            feedback.innerHTML = `❌ GAME OVER!<br>O número era ${secretNumber}.`;
+            feedback.style.color = "var(--danger)";
+            document.getElementById('score').innerText = 0;
+        }
+
+        // Esconde o botão de chutar e mostra o de reiniciar
+        btnChutar.classList.add('hidden');
+        input.classList.add('hidden');
+        resetBtn.classList.remove('hidden');
+    }
+
+    // Atalho: Enter no teclado também chuta
+    document.getElementById('guess-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') makeGuess();
+    });
+</script>
+
+</body>
+</html>
